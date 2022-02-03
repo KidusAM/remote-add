@@ -1,8 +1,8 @@
 
 syntax = "proto2";
 
-
 message AdditionArgs {
+    # In new code, we actually don't use required anymore. 
     required int32 arg1      = 1;
     required int32 arg2      = 2; 
 }
