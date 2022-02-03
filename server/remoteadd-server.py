@@ -3,6 +3,8 @@ import socketserver
 
 # receives the binary protobuf data for the AdditionArgs and returns
 # the raw protobuf data with the sum in an AdditionResults
+
+# Use type annotation for arguments and returned value.
 def doAdd(args_pb):
     args = AdditionArgs()
     args.ParseFromString(args_pb)
@@ -16,6 +18,7 @@ def doAdd(args_pb):
 # handler for server requests
 class AddRequestHandler(socketserver.BaseRequestHandler):
     def handle(self):
+        # used named argument if the argument value is not decriptive enough
         req_raw = self.request.recv(1024)
 
         result = doAdd(req_raw)
