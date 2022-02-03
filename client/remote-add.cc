@@ -26,6 +26,8 @@ int main(int argc, char **argv)
     std::cout << arg1 << " + " << arg2 << " =\n";
 
     // construct request arguments
+    
+    // AdditionArgs to_be_added works?
     auto to_be_added = AdditionArgs();
     to_be_added.set_arg1(arg1);
     to_be_added.set_arg2(arg2);
@@ -33,6 +35,7 @@ int main(int argc, char **argv)
     to_be_added.SerializeToString(&serialized_args);
 
     // setup socket
+    // `auto` shuold be used only when the type is obvious. Also, in this case, that can be an annonymous function.
     auto die = [](const char *msg){
         perror(msg);
         exit(1);
@@ -72,6 +75,7 @@ int main(int argc, char **argv)
     // setup the string
     std::string result_serialized(buf, response_size);
     // now parse the response
+    // Losing the local varialbe will be more performent.
     res.ParseFromString(result_serialized);
 
     std::cout << res.sum() << std::endl;
