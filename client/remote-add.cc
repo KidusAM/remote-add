@@ -1,13 +1,48 @@
 #include <iostream>
+#include <memory>
 #include <string>
 #include <cstdlib>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <grpcpp/grpcpp.h>
 #include "lib/remoteadd.pb.h"
+#include "lib/remoteadd.grpc.pb.h"
 
-#define SERVER_PORT 12345
+#define TARGET "localhost:12345"
+
+class RemoteAddClient {
+public:
+    RemoteAddClient(std::shared_ptr<grpc::ChannelInterface> channel)
+        : stub_(RemoteAdd::NewStub(channel)) {}
+
+    // Calls the add function on the server
+    // returns a boolean that indicates whether the call succeeded, and if that
+    // is true, the result of the addition
+    std::pair<bool, int> Add(int n1, int n2) {
+        AdditionArgs args;
+        args.set_arg1(n1);
+        args.set_arg2(n2);
+
+        AdditionResults reply;
+
+        grpc::ClientContext context;
+        grpc::Status status = stub_->Add(&context, args, &reply);
+
+        if (status.ok()) {
+            return {true, reply.sum()};
+        } else {
+            std::cerr << "RemoteAddClient err " << status.error_code() << ": "
+                      << status.error_message() << std::endl;
+        }
+
+        return {false, 0};
+    }
+
+private:
+    std::unique_ptr<RemoteAdd::Stub> stub_;
+};
 
 int main(int argc, char **argv)
 {
@@ -23,59 +58,16 @@ int main(int argc, char **argv)
     arg1 = std::stoi(argv[1]);
     arg2 = std::stoi(argv[2]);
 
-    std::cout << arg1 << " + " << arg2 << " =\n";
+    RemoteAddClient adder(
+            grpc::CreateChannel(TARGET, grpc::InsecureChannelCredentials()));
 
-    // construct request arguments
-    auto to_be_added = AdditionArgs();
-    to_be_added.set_arg1(arg1);
-    to_be_added.set_arg2(arg2);
-    std::string serialized_args;
-    to_be_added.SerializeToString(&serialized_args);
-
-    // setup socket
-    auto die = [](const char *msg){
-        perror(msg);
-        exit(1);
-    };
-
-    // first the sockaddr
-    sockaddr_in server_addr;
-    memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(SERVER_PORT);
-    server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-
-    int sock;
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        die("socket() failed");
+    std::pair<bool, int> result = adder.Add(arg1, arg2);
+    if (result.first) {
+        std::cout << arg1 << " + " << arg2 << " =\n";
+        std::cout << result.second << std::endl;
+    } else {
+        std::cerr << "Request failed" << std::endl;
     }
-
-    if (connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-        die("connect() failed");
-    }
-
-    // send the request
-    if (send(sock, &serialized_args[0], serialized_args.size(), 0)
-            != (ssize_t) serialized_args.size()) {
-        die("send() failed");
-    }
-
-    // receive the response
-    AdditionResults res;
-    char buf[1024]; // should be enough for this example
-    memset(buf, 0, sizeof(buf));
-    int response_size;
-    if ( (response_size = recv(sock, buf, sizeof(buf), 0)) < 0) {
-        die("recv() failed");
-    }
-
-    // setup the string
-    std::string result_serialized(buf, response_size);
-    // now parse the response
-    res.ParseFromString(result_serialized);
-
-    std::cout << res.sum() << std::endl;
-
 
     return 0;
 }
