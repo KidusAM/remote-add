@@ -5,6 +5,8 @@ cc_binary(
     deps = [
         "//lib:remoteadd_cc_grpc",
         "@com_github_grpc_grpc//:grpc++"
+    ],
+    copts = [
+        "-std=c++17",
     ]
-
 )

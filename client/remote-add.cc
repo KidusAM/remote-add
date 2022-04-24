@@ -2,6 +2,7 @@
 #include <memory>
 #include <string>
 #include <cstdlib>
+#include <optional>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -20,7 +21,7 @@ public:
     // Calls the add function on the server
     // returns a boolean that indicates whether the call succeeded, and if that
     // is true, the result of the addition
-    std::pair<bool, int> Add(int n1, int n2) {
+    std::optional<int> Add(int n1, int n2) {
         AdditionArgs args;
         args.set_arg1(n1);
         args.set_arg2(n2);
@@ -31,13 +32,13 @@ public:
         grpc::Status status = stub_->Add(&context, args, &reply);
 
         if (status.ok()) {
-            return {true, reply.sum()};
+            return reply.sum();
         } else {
             std::cerr << "RemoteAddClient err " << status.error_code() << ": "
                       << status.error_message() << std::endl;
         }
 
-        return {false, 0};
+        return std::nullopt;
     }
 
 private:
@@ -61,10 +62,10 @@ int main(int argc, char **argv)
     RemoteAddClient adder(
             grpc::CreateChannel(TARGET, grpc::InsecureChannelCredentials()));
 
-    std::pair<bool, int> result = adder.Add(arg1, arg2);
-    if (result.first) {
+    std::optional<int> result = adder.Add(arg1, arg2);
+    if (result) {
         std::cout << arg1 << " + " << arg2 << " =\n";
-        std::cout << result.second << std::endl;
+        std::cout << *result << std::endl;
     } else {
         std::cerr << "Request failed" << std::endl;
     }
