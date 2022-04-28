@@ -1,49 +1,9 @@
 #include <iostream>
-#include <memory>
 #include <string>
-#include <cstdlib>
 #include <optional>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <grpcpp/grpcpp.h>
-#include "lib/remoteadd.pb.h"
-#include "lib/remoteadd.grpc.pb.h"
+#include "client/remoteadd-client-lib.h"
 
 #define TARGET "localhost:12345"
-
-class RemoteAddClient {
-public:
-    RemoteAddClient(std::shared_ptr<grpc::ChannelInterface> channel)
-        : stub_(RemoteAdd::NewStub(channel)) {}
-
-    // Calls the add function on the server
-    // returns a boolean that indicates whether the call succeeded, and if that
-    // is true, the result of the addition
-    std::optional<int> Add(int n1, int n2) {
-        AdditionArgs args;
-        args.set_arg1(n1);
-        args.set_arg2(n2);
-
-        AdditionResults reply;
-
-        grpc::ClientContext context;
-        grpc::Status status = stub_->Add(&context, args, &reply);
-
-        if (status.ok()) {
-            return reply.sum();
-        } else {
-            std::cerr << "RemoteAddClient err " << status.error_code() << ": "
-                      << status.error_message() << std::endl;
-        }
-
-        return std::nullopt;
-    }
-
-private:
-    std::unique_ptr<RemoteAdd::Stub> stub_;
-};
 
 int main(int argc, char **argv)
 {
