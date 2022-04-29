@@ -29,5 +29,6 @@ cc_grpc_library(
     srcs = [":remoteadd_proto"],
     deps = [":remoteadd_cc_pb2"],
     grpc_only = True,
+    generate_mocks = True,
     visibility = ["//visibility:public"]
 )

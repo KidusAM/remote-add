@@ -24,6 +24,7 @@ cc_test(
     deps = [
         "@com_google_googletest//:gtest_main",
         "remoteadd-client-lib",
+        "//lib:remoteadd_cc_grpc",
     ],
     copts = ["-std=c++17"],
 )
