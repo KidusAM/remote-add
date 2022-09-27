@@ -8,3 +8,12 @@ py_binary(
         "//lib:remoteadd_py_pb2",
     ]
 )
+
+java_binary(
+    name = "RemoteAddServerRunner",
+    srcs = ["java/RemoteAddServerRunner.java"],
+    deps = [
+        "//lib:remoteadd_java_proto",
+        "//lib:remoteadd_java_grpc",
+        ],
+)

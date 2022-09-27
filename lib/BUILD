@@ -1,5 +1,6 @@
 load("@com_github_grpc_grpc//bazel:python_rules.bzl", "py_grpc_library", "py_proto_library")
 load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
+load("@rules_proto_grpc//java:defs.bzl", "java_proto_library", "java_grpc_library")
 
 proto_library(
     name = "remoteadd_proto",
@@ -31,4 +32,17 @@ cc_grpc_library(
     grpc_only = True,
     generate_mocks = True,
     visibility = ["//visibility:public"]
+)
+
+java_proto_library(
+    name = "remoteadd_java_proto",
+    protos = [":remoteadd_proto"],
+    visibility = ["//visibility:public"],
+)
+
+java_grpc_library(
+    name = "remoteadd_java_grpc",
+    protos = [":remoteadd_proto"],
+    visibility = ["//visibility:public"],
+    
 )
