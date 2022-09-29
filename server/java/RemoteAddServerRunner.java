@@ -9,7 +9,7 @@ public class RemoteAddServerRunner {
     private final static int SERVER_PORT = 12345;
 
     public static void main(String args[]) {
-        System.out.println("test 123");
+        System.out.println("Server main method");
         Server server = ServerBuilder
             .forPort(SERVER_PORT)
             .addService(new RemoteAddImpl())
